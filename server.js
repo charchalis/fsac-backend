@@ -14,6 +14,8 @@ const verifyToken = require('./logic/verifyToken.js')
 const getFriendList = require('./queries/getFriendList.js')
 const getPossibleFriends = require('./queries/getPossibleFriends.js')
 const addFriend = require('./queries/addFriend.js')
+const sendFsac = require('./queries/sendFsac.js')
+
 
 app.use(express.json());
 
@@ -103,10 +105,11 @@ io.on("connection", (socket, token) => {
 
   })
   
-  socket.on("add friend", async ({token, friendId})=> {
+  socket.on("add friend", async ({token, friend})=> {
     console.log("add friend request")
     
     console.log("token: ", token)
+    const friendId = friend.id
     console.log("friendId: ", friendId)
 
     const authenticated = verifyToken(token) 
@@ -117,7 +120,7 @@ io.on("connection", (socket, token) => {
       const friendshipConfirmation = await addFriend(authenticated.user, friendId)
       console.log(friendshipConfirmation)
       if(friendshipConfirmation){
-        socket.emit("new friend", friendId)
+        socket.emit("new friend", friend)
       }
     }else{
       console.log("Untrusty socket. Disconnecting it")
@@ -125,6 +128,34 @@ io.on("connection", (socket, token) => {
       socket.disconnect()
     }
 
+
+  })
+
+  socket.on("fsac?", async ({token, friendId})=> {
+    console.log("fsac request")
+
+    console.log("token: ", token)
+    console.log("friendId: ", friendId)
+
+    const authenticated = verifyToken(token) 
+
+    if(authenticated.success){
+      console.log("Trusty socket. Adding sending fsac")
+      console.log("authenticated.user:", authenticated.user)
+
+      const timespan = Date.now() + 4 * 60 * 60 * 1000 //current unix time + 4 hours
+
+      const fsacConfirmation = await sendFsac(authenticated.user, friendId, timespan)
+      console.log(fsacConfirmation)
+      if(fsacConfirmation){
+        console.log("fsac on database. sending fsac invite confirmation back to client")
+        socket.emit("fsac invite successful", {friendId: friendId, timespan: timespan})
+      }
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
 
   })
 

@@ -1,11 +1,11 @@
 const getQueryResult = require('../logic/getQueryResult.js')
 
-const addFriend = async (userId, friendId) => {
+const sendFsac = async (userId, friendId, timespan) => {
   try{
 
     const queryResult = await getQueryResult(
-      'insert into friendship (user1_id, user2_id) values (?,?)'
-    ,[userId, friendId]);
+      'update friendship set fsac = ? where user1_id = ? and user2_id = ?'
+    ,[timespan, userId, friendId]);
   
     console.log("queryResult:", queryResult)
     
@@ -17,4 +17,4 @@ const addFriend = async (userId, friendId) => {
   return true
 }
 
-  module.exports = addFriend 
+  module.exports = sendFsac 

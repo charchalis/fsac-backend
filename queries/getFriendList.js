@@ -4,8 +4,8 @@ const getQueryResult = require('../logic/getQueryResult.js')
 
 const getFriendList = async (userId) => {
     const friendList = await getQueryResult(
-      'select id, username, firstName, lastName, imagePath from user where id in (select user1_id as user_id from friendship where user2_id = ? UNION select user2_id from friendship where user1_id = ?)'
-    ,[userId, userId]);
+      'select user.id, user.username, user.firstName, user.lastName, user.imagePath, friendship.fsac as timespan from user, friendship where user.id = friendship.user2_id and friendship.user1_id = ?'
+    ,[userId]);
   
     console.log(friendList)
   
