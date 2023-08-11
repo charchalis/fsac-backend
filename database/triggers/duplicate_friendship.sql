@@ -1,3 +1,5 @@
+DROP TRIGGER IF EXISTS duplicate_friendship;
+
 CREATE TRIGGER duplicate_friendship
 AFTER INSERT ON Friendship
 FOR EACH ROW
