@@ -16,6 +16,7 @@ const getPossibleFriends = require('./queries/getPossibleFriends.js')
 const addFriend = require('./queries/addFriend.js')
 const sendFsac = require('./queries/sendFsac.js')
 const updateExpiredFsacs = require('./queries/updateExpiredFsacs.js')
+const getFirstExpiringFsac = require('./queries/getFirstExpiringFsac.js')
 
 
 app.use(express.json());
@@ -170,7 +171,7 @@ io.on("connection", (socket, token) => {
 activatePosts(app)
 
 updateExpiredFsacs(Date.now())
-
+getFirstExpiringFsac()
 
 
 
