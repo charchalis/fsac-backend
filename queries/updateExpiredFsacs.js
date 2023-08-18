@@ -1,20 +1,18 @@
 const getQueryResult = require('../logic/getQueryResult.js')
 
-const updateExpiredFsacs = async (currentTime) => {
-
-    
+const updateExpiredFsacs = async () => {
 
     console.log("updating expired fsacs")
+
+    const currentTime = Date.now()
 
     console.log(currentTime)
 
     try{
 
-        const queryResult = await getQueryResult(
-            'update friendship set fsac = NULL where fsac < ?  --this no work for some reason'  
+        await getQueryResult(
+            'update friendship set fsac = NULL where fsac < ? and fsac <> 1'  
         ,[currentTime]);
-      
-        console.log("queryResult:", queryResult)
         
         return true;
     

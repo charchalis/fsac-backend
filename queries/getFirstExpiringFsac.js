@@ -11,9 +11,8 @@ const getFirstExpiringFsac = async () => {
     
         console.log("queryResult:", queryResult)
 
-        return true
 
-        return queryResult['min(fsac)'];
+        return queryResult[0]['min(fsac)'];
 
     }catch(err){
         return false;

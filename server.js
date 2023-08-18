@@ -17,6 +17,7 @@ const addFriend = require('./queries/addFriend.js')
 const sendFsac = require('./queries/sendFsac.js')
 const updateExpiredFsacs = require('./queries/updateExpiredFsacs.js')
 const getFirstExpiringFsac = require('./queries/getFirstExpiringFsac.js')
+const cronJobExpireNextFsac = require('./logic/cronJobExpireNextFsac.js')
 
 
 app.use(express.json());
@@ -170,8 +171,8 @@ io.on("connection", (socket, token) => {
 /*activate posts*/
 activatePosts(app)
 
-updateExpiredFsacs(Date.now())
-getFirstExpiringFsac()
+updateExpiredFsacs()
+cronJobExpireNextFsac()
 
 
 
