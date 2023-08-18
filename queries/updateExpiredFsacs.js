@@ -2,11 +2,9 @@ const getQueryResult = require('../logic/getQueryResult.js')
 
 const updateExpiredFsacs = async () => {
 
-    console.log("updating expired fsacs")
+    console.log("\nUpdating expired fsacs")
 
     const currentTime = Date.now()
-
-    console.log(currentTime)
 
     try{
 
