@@ -44,7 +44,7 @@ app.post('/createAccount', upload.single('fileData'), async (req, res) => {
   const hashedPassword = await hashPassword(password);
   
   try{
-    await getQueryResult('insert into user values (?, ?, ?, null, ?, ?, ?, 0)',
+    await getQueryResult('insert into user values (?, ?, ?, ?, ?, ?)',
     [username, username, hashedPassword, firstName, lastName, imagePath])
   }catch(err){
     return res.status(404).json({ message: 'error inserting user to database' });

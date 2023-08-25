@@ -28,7 +28,7 @@ const cronJobExpireNextFsac = async () => {
         
         console.log(`\nNext fsac expiring at ${new Date(nextFsacTimestamp)}`);
     } else {
-        console.log('Target time has already passed.');
+        console.log('No active fsacs going on.');
     }
 }
 
