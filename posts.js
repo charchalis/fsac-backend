@@ -86,8 +86,6 @@ app.post('/login', async (req, res) => {
     
     console.log("token: ", token)
 
-    getQueryResult('update user set token = ? where id = ?', [token, user.id])
-
     // Return the token to the client
     res.json({ token });
   
@@ -110,10 +108,11 @@ app.get('/authenticate', async (req, res) => {
 
   const [authenticated2] = await getQueryResult('select count(id) as authenticated from user where id=?', [authenticated.user])
   console.log("authenticated2: ", authenticated2['authenticated'])
-  console.log("popo")
   
-  if(authenticated2['authenticated']) res.status(200).json({success: true,  message: 'Protected route accessed successfullyaaa', user: authenticated.user });
-  else res.status(401).json({success: false,  message: 'Authentication failed'});
+  if(authenticated2['authenticated']){
+    const [user] = await getQueryResult('select id, username, firstName, lastName from user where id = ?', [authenticated.user])
+    res.status(200).json({success: true,  message: 'Protected route accessed successfullyaaa', user: user });
+  }else res.status(401).json({success: false,  message: 'Authentication failed'});
 
   // Access granted, return a response
   res.end()
