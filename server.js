@@ -44,7 +44,8 @@ io.on("connection", (socket, token) => {
   socket.on('disconnect', () => {
     // Remove the socket ID when a client disconnects
     console.log("user disconnected")
-    delete connectedClients[socket.id];
+    const disconnectedClient = connectedClients.find((client) => client.socket.id === socket.id)
+    if(disconnectedClient) delete connectedClients[disconnectedClient.userId];
   console.log("connectedClients: ", Object.keys(connectedClients).length)
   });
   
@@ -56,7 +57,7 @@ io.on("connection", (socket, token) => {
 
     if(authenticated.success){
       console.log("Trusty socket. Proceeding")
-      connectedClients[socket.id] = {userId: authenticated.user, socket: socket}
+      connectedClients[authenticated.user] = {userId: authenticated.user, socket: socket}
       console.log("connectedClients: ", Object.keys(connectedClients).length)
       console.log(connectedClients)
     }else{
@@ -134,10 +135,11 @@ io.on("connection", (socket, token) => {
 
   })
 
-  socket.on("fsac?", async ({token, friendId})=> {
+  socket.on("fsac?", async ({token, userId, friendId})=> {
     console.log("fsac request")
 
     console.log("token: ", token)
+    console.log("userId: ", userId)
     console.log("friendId: ", friendId)
 
     const authenticated = verifyToken(token) 
@@ -151,8 +153,22 @@ io.on("connection", (socket, token) => {
       const fsacConfirmation = await sendFsac(authenticated.user, friendId, timespan)
       console.log(fsacConfirmation)
       if(fsacConfirmation){
+
         console.log("fsac on database. sending fsac invite confirmation back to client")
         socket.emit("fsac invite successful", {friendId: friendId, timespan: timespan})
+
+        const friendObject = connectedClients[friendId]
+        
+        const friendSocketId = friendObject ? friendObject.socket.id : undefined
+
+        if(friendSocketId){
+          console.log("found socket")
+          io.to(friendSocketId).emit("received fsac", userId);   
+        }
+        else console.log("friend socket not found")
+
+        //TODO: notify friend through socket
+        
       }
     }else{
       console.log("Untrusty socket. Disconnecting it")
