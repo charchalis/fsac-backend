@@ -31,22 +31,37 @@ const connectedClients = []
 
 /*SOCKET*/ 
 
-io.on("connection", (socket, token) => {
+io.on("connection", (socket) => {
   console.log("user connected")
-  console.log("papers please")
-  //console.log(socket)
 
-  socket.emit("papers please")
+  
+  //wait so clients have time to setup the socket
+  const wait = async () => {
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+    console.log("sleeping")
+    await sleep(2000)
+    console.log("woke up")
+  }
+
+  wait().then(() =>{
+    console.log("papers please")
+    socket.emit("papers please")
+  })
   
   
   
   
-  socket.on('disconnect', () => {
+  
+  socket.on('disconnect', (reason) => {
     // Remove the socket ID when a client disconnects
     console.log("user disconnected")
+    console.log("reason: ", reason)
     const disconnectedClient = connectedClients.find((client) => client.socket.id === socket.id)
     if(disconnectedClient) delete connectedClients[disconnectedClient.userId];
-  console.log("connectedClients: ", Object.keys(connectedClients).length)
+    console.log("connectedClients: ", Object.keys(connectedClients).length)
+    console.log("connectedClients: ", connectedClients)
   });
   
   socket.on('authenticate client socket', token => {
