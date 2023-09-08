@@ -19,7 +19,7 @@ const getPrivateChatroomId = async (user1, user2) => {
 
     if(queryResult.length > 0) return queryResult[0];
     
-    
+    //aqui
     
     return true;
 
