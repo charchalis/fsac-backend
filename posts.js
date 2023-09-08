@@ -16,7 +16,7 @@ const activatePosts = (app) => {
 
 
 
-
+console.log("activating posts")
 
 
 /*AUTHENTICATION*/
@@ -70,7 +70,7 @@ app.post('/login', async (req, res) => {
 
   console.log("user: ", user)
 
-  if(!user) {
+  if(!user) {2
     return res.status(404).json({ message: 'User not found' });
   }
 

@@ -18,6 +18,7 @@ const sendFsac = require('./queries/sendFsac.js')
 const updateExpiredFsacs = require('./queries/updateExpiredFsacs.js')
 const getFirstExpiringFsac = require('./queries/getFirstExpiringFsac.js')
 const cronJobExpireNextFsac = require('./logic/cronJobExpireNextFsac.js')
+const getChatroomId = require('./queries/getChatroomId.js')
 
 
 app.use(express.json());
@@ -182,7 +183,7 @@ io.on("connection", (socket) => {
         }
         else console.log("friend socket not found")
 
-        //TODO: notify friend through socket
+        //TODO: notification for friend 
         
       }
     }else{
@@ -190,6 +191,59 @@ io.on("connection", (socket) => {
       socket.emit("untrusty socket")
       socket.disconnect()
     }
+
+  })
+
+  socket.on("sent private message", ({token, message}) => {
+    console.log("sent private message")
+    
+    const authenticated = verifyToken(token)
+
+
+    if(authenticated.success){
+
+      console.log("Trusty socket. sending message")
+
+      
+      
+        
+      
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
+
+
+  })
+
+  socket.on("entered private chatroom", ({token, friend}) => {
+
+    console.log("entered private chatroom")
+    
+    const authenticated = verifyToken(token)
+
+    if(authenticated.success){
+
+      console.log("Trusty socket. sending chatroom messages")
+      
+      const chatroomId = getChatroomId(authenticated.user, friend)
+      
+      // if(chatroomId){
+        
+      // }
+
+      // socket.emit("take messages", )
+      
+      
+        
+      
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
+
 
   })
 
