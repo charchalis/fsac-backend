@@ -2,10 +2,8 @@ DROP TRIGGER IF EXISTS UpdateMirroredFsac;
 
 CREATE TRIGGER UpdateMirroredFsac
 AFTER UPDATE ON Friendship
+WHEN NOT (OLD.fsac = 1 and NEW.fsac IS NULL)
 BEGIN
-
-    select 'popo';
-
     UPDATE Friendship
     SET fsac = CASE 
                   WHEN NEW.fsac IS NULL THEN NULL

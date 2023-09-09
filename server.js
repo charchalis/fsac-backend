@@ -18,7 +18,9 @@ const sendFsac = require('./queries/sendFsac.js')
 const updateExpiredFsacs = require('./queries/updateExpiredFsacs.js')
 const getFirstExpiringFsac = require('./queries/getFirstExpiringFsac.js')
 const cronJobExpireNextFsac = require('./logic/cronJobExpireNextFsac.js')
-const getChatroomId = require('./queries/getChatroomId.js')
+const getChatroomId = require('./queries/getChatroomId.js');
+const acceptFsac = require('./queries/acceptFsac.js');
+const declineFsac = require('./queries/declineFsac.js');
 
 
 app.use(express.json());
@@ -192,6 +194,48 @@ io.on("connection", (socket) => {
       socket.disconnect()
     }
 
+  })
+
+  socket.on("accepted fsac", async ({token, friendId}) => {
+    console.log("accepted fsac")
+    
+    console.log("token: ", token)
+    console.log("friendId: ", friendId)
+
+    const authenticated = verifyToken(token) 
+
+    if(authenticated.success){
+      console.log("Trusty socket. accepting fsac")
+      console.log("authenticated.user:", authenticated.user)
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
+  })
+
+  socket.on("declined fsac", async ({token, friendId}) => {
+    console.log("declined fsac")
+    
+    console.log("token: ", token)
+    console.log("friendId: ", friendId)
+
+    const authenticated = verifyToken(token) 
+
+    if(authenticated.success){
+      console.log("Trusty socket. declining fsac")
+      console.log("authenticated.user:", authenticated.user)
+
+      const databaseSuccess = declineFsac(authenticated.user, friendId)
+      
+      if(databaseSuccess) socket.emit("successful fsac decline", friendId)
+
+      
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
   })
 
   socket.on("sent private message", ({token, message}) => {

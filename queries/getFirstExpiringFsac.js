@@ -6,7 +6,7 @@ const getFirstExpiringFsac = async () => {
 
 
         const queryResult = await getQueryResult(
-        'select min(fsac) from friendship where fsac <> 1'
+        'select min(fsac) from friendship where fsac <> 1 and fsac <> -1'
         ,[]);
 
         return queryResult[0]['min(fsac)'];
