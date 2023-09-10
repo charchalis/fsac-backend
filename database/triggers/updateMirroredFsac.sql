@@ -8,6 +8,7 @@ BEGIN
     SET fsac = CASE 
                   WHEN NEW.fsac IS NULL THEN NULL
                   WHEN NEW.fsac = 1 THEN NULL
+                  WHEN NEW.fsac = -1 THEN -1
                   ELSE 1
                 END
     WHERE (user1_id = NEW.user2_id AND user2_id = NEW.user1_id);

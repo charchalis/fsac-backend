@@ -207,6 +207,11 @@ io.on("connection", (socket) => {
     if(authenticated.success){
       console.log("Trusty socket. accepting fsac")
       console.log("authenticated.user:", authenticated.user)
+      const acceptFsacSuccess = await acceptFsac(authenticated.user, friendId)
+      if(acceptFsacSuccess){
+        console.log("acceptFsacSuccess: ", acceptFsacSuccess)
+        socket.emit("successful accept fsac", {chatroomId: acceptFsacSuccess.chatroomId, friendId: friendId})
+      }
     }else{
       console.log("Untrusty socket. Disconnecting it")
       socket.emit("untrusty socket")
