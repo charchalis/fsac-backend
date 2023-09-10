@@ -1,23 +1,23 @@
 const getQueryResult = require('../logic/getQueryResult.js')
 
-const acceptFsac = async (user1, user2) => {
+const acceptFsac = async (receiver, sender) => {
 
   try{
       
-    let query = "update friendship set fsac = -1 where user1_id = ? and user2_id = ?" 
-    let queryResult = await getQueryResult(query, [user1, user2]);
+    let query = "update fsac set status = 'accepted' where sender = ? and receiver = ?"
+    let queryResult = await getQueryResult(query, [sender, receiver]);
       
-    const chatroomId = user1 + "-" + user2
+    const chatroomId = sender + "-" + receiver 
       
     console.log("chatroomId", chatroomId)
     
-    query = "insert into chatroom values (?)" 
-    queryResult = await getQueryResult(query, [chatroomId]);
+    const chatroomEndDate = Date.now() + 4 * 60 * 60 * 1000 //current unix time + 4 hours
 
-    console.log("popo")
+    query = "insert into chatroom values (?, ? )" 
+    queryResult = await getQueryResult(query, [chatroomId, chatroomEndDate]);
     
-    query = "update friendship set chatroomId = ? where (user1_id = ? and user2_id = ?) or (user2_id = ? and user1_id) " 
-    queryResult = await getQueryResult(query, [chatroomId, user1, user2, user1, user2]);
+    query = "insert into privateChatroom values (?,?,?)"
+    queryResult = await getQueryResult(query, [chatroomId, sender, receiver]);
   
     return chatroomId;
 

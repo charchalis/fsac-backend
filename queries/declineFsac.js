@@ -4,7 +4,7 @@ const declineFsac = async (user1, user2) => {
 
   try{
       
-    const query = "update friendship set fsac = null where user1_id = ? and user2_id = ?" 
+    const query = "update fsac set status = 'declined' where receiver = ? and sender = ?" 
 
     const queryResult = await getQueryResult(query, [user1, user2]);
   

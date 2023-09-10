@@ -166,14 +166,14 @@ io.on("connection", (socket) => {
       console.log("Trusty socket. Adding sending fsac")
       console.log("authenticated.user:", authenticated.user)
 
-      const timespan = Date.now() + 4 * 60 * 60 * 1000 //current unix time + 4 hours
+      const endDate = Date.now() + 4 * 60 * 60 * 1000 //current unix time + 4 hours
 
-      const fsacConfirmation = await sendFsac(authenticated.user, friendId, timespan)
+      const fsacConfirmation = await sendFsac(authenticated.user, friendId, endDate)
       console.log(fsacConfirmation)
       if(fsacConfirmation){
 
         console.log("fsac on database. sending fsac invite confirmation back to client")
-        socket.emit("fsac invite successful", {friendId: friendId, timespan: timespan})
+        socket.emit("fsac invite successful", {friendId: friendId, endDate: endDate})
 
         const friendObject = connectedClients[friendId]
         
@@ -210,7 +210,7 @@ io.on("connection", (socket) => {
       const acceptFsacSuccess = await acceptFsac(authenticated.user, friendId)
       if(acceptFsacSuccess){
         console.log("acceptFsacSuccess: ", acceptFsacSuccess)
-        socket.emit("successful accept fsac", {chatroomId: acceptFsacSuccess.chatroomId, friendId: friendId})
+        socket.emit("successful accept fsac", {chatroomId: acceptFsacSuccess, friendId: friendId})
       }
     }else{
       console.log("Untrusty socket. Disconnecting it")

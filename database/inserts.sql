@@ -6,5 +6,11 @@ INSERT INTO User VALUES
 ('Potus', 'Potus', '$2b$10$/LK7bieXAsz20aDZsnBbsOEQ3DPQWxaGPFW6VvT8/bP0OrgkoNlGq', 'Joe', 'Biden', 'f3b52736b5772be05908eccd3ce33732');
 
 
---INSERT INTO FriendShip VALUES
---('Polaco', 'ana'),
+INSERT INTO FriendShip VALUES
+('Polaco', 'Hanuruh'),
+('Polaco', 'Potus'),
+('Polaco', 'Caracol');
+
+INSERT INTO Fsac (sender, receiver, endDate, status) VALUES
+('Polaco', 'Potus', '9999999999999', 'standby'),
+('Caracol', 'Polaco', '9999999999999', 'standby');
