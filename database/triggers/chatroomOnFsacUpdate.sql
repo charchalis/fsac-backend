@@ -6,12 +6,16 @@ AFTER UPDATE ON Fsac
 WHEN OLD.status != 'accepted' and NEW.status = 'accepted' 
 BEGIN
   INSERT INTO chatroom VALUES (NEW.sender || '-' || NEW.receiver, OLD.endDate);
-  --INSERT INTO privatechatroom (id, user1_id, user2_id) VALUES (NEW.sender + '-' + NEW.receiver, NEW.sender, NEW.receiver);
+  INSERT INTO privatechatroom (id, user1_id, user2_id) VALUES (NEW.sender || '-' || NEW.receiver, NEW.sender, NEW.receiver);
 END;
 
 CREATE TRIGGER removeChatroom 
 AFTER UPDATE ON Fsac 
 WHEN OLD.status = 'accepted' and NEW.status != 'accepted'
 BEGIN
-  DELETE FROM chatroom where chatroom.id in (select privatechatroom.id from privatechatroom where (user1_id = NEW.sender and user2_id = NEW.receiver) or (user1_id = NEW.receiver and user2_id = NEW.sender) );
+
+  --THIS DOES NOT WORK
+  DELETE FROM chatroom where id = (NEW.sender || '-' || NEW.receiver) or id = (NEW.receiver || '-' || NEW.sender);
+  DELETE FROM privatechatroom where id = (NEW.sender || '-' || NEW.receiver) or id = (NEW.receiver || '-' || NEW.sender);
+
 END;
