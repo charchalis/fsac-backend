@@ -9,15 +9,10 @@ const acceptFsac = async (receiver, sender) => {
       
     const chatroomId = sender + "-" + receiver 
       
-    console.log("chatroomId", chatroomId)
-    
     const chatroomEndDate = Date.now() + 4 * 60 * 60 * 1000 //current unix time + 4 hours
-
-    query = "insert into chatroom values (?, ? )" 
-    queryResult = await getQueryResult(query, [chatroomId, chatroomEndDate]);
     
-    query = "insert into privateChatroom values (?,?,?)"
-    queryResult = await getQueryResult(query, [chatroomId, sender, receiver]);
+    //update chatroom.endDate to chatroomEndDate maybe ???
+
   
     return chatroomId;
 
