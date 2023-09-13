@@ -48,13 +48,13 @@ CREATE TABLE PublicChatroomUser(
 );
 
 CREATE TABLE Message(
-    id          INTEGER, 
+    id          INTEGER PRIMARY KEY AUTOINCREMENT, 
     chatroomId  VARCHAR(50) REFERENCES Chatroom,
     userId      VARCHAR(50) REFERENCES User,
     text        VARCHAR(500),
-    seend       INTEGER,
+    seen       INTEGER,
     date        INTEGER,
 
-    PRIMARY KEY (id, chatroomId)
+    UNIQUE (id, chatroomId)
 );
 

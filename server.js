@@ -18,9 +18,10 @@ const sendFsac = require('./queries/sendFsac.js')
 const updateExpiredFsacs = require('./queries/updateExpiredFsacs.js')
 const getFirstExpiringFsac = require('./queries/getFirstExpiringFsac.js')
 const cronJobExpireNextFsac = require('./logic/cronJobExpireNextFsac.js')
-const getChatroomId = require('./queries/getChatroomId.js');
 const acceptFsac = require('./queries/acceptFsac.js');
 const declineFsac = require('./queries/declineFsac.js');
+const getChatroomMessages = require('./queries/getChatroomMessages.js');
+const insertMessage = require('./queries/insertMessage.js');
 
 
 app.use(express.json());
@@ -245,6 +246,8 @@ io.on("connection", (socket) => {
 
   socket.on("sent private message", ({token, message}) => {
     console.log("sent private message")
+
+    console.log("message: ", message)
     
     const authenticated = verifyToken(token)
 
@@ -253,6 +256,18 @@ io.on("connection", (socket) => {
 
       console.log("Trusty socket. sending message")
 
+      insertMessage(message)
+
+      const friendId = message.receiverId
+
+      const friendObject = connectedClients[friendId]
+        
+      const friendSocketId = friendObject ? friendObject.socket.id : undefined
+
+      if(friendSocketId){
+        console.log("found socket")
+        io.to(friendSocketId).emit("received private message", userId); 
+      }else console.log("friend socket not found")
       
       
         
@@ -266,26 +281,17 @@ io.on("connection", (socket) => {
 
   })
 
-  socket.on("entered private chatroom", ({token, friend}) => {
+  socket.on("gimme messages", async ({token, chatroomId}) => {
 
-    console.log("entered private chatroom")
+    console.log("gimme messages")
     
     const authenticated = verifyToken(token)
 
     if(authenticated.success){
 
-      console.log("Trusty socket. sending chatroom messages")
-      
-      const chatroomId = getChatroomId(authenticated.user, friend)
-      
-      // if(chatroomId){
-        
-      // }
-
-      // socket.emit("take messages", )
-      
-      
-        
+      console.log("Trusty socket. sending chatroom (", chatroomId, ") messages")
+      const messages = await getChatroomMessages(chatroomId)
+      socket.emit("take messages", messages)
       
     }else{
       console.log("Untrusty socket. Disconnecting it")
