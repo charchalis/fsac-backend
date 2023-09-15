@@ -10,21 +10,13 @@ const cronJobExpireNextFsac = async () => {
 
     if (validTime) {
 
-        console.log(nextFsacTimestamp)
-
         const fsacDate = new Date(nextFsacTimestamp)
-        
-        console.log(fsacDate)
 
         const seconds = fsacDate.getSeconds()
         const minutes = fsacDate.getMinutes()
         const hours = fsacDate.getHours()
-        
-        console.log(seconds, ':', minutes, ':', hours)
 
         const cronExpression = `${seconds} ${minutes} ${hours} * * *`;
-        
-        console.log("doing job")
 
         const job = cron.schedule(cronExpression, async () => {
             console.log('Cron job is running!');
