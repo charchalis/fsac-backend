@@ -76,7 +76,6 @@ io.on("connection", (socket) => {
       console.log("Trusty socket. Proceeding")
       connectedClients[authenticated.user] = {userId: authenticated.user, socket: socket}
       console.log("connectedClients: ", Object.keys(connectedClients).length)
-      console.log(connectedClients)
     }else{
       console.log("Untrusty socket. Disconnecting it")
       socket.emit("untrusty socket")
@@ -192,6 +191,16 @@ io.on("connection", (socket) => {
       const acceptFsacSuccess = await acceptFsac(authenticated.user, friendId)
       if(acceptFsacSuccess){
         socket.emit("successful accept fsac", {chatroomId: acceptFsacSuccess, friendId: friendId})
+
+        const friendObject = connectedClients[friendId]
+        
+        const friendSocketId = friendObject ? friendObject.socket.id : undefined
+
+        if(friendSocketId){
+          console.log("found socket")
+          io.to(friendSocketId).emit("accepted fsac", {friendId: authenticated.user, chatroomId: acceptFsacSuccess});   
+        }
+        else console.log("friend socket not found")
       }
     }else{
       console.log("Untrusty socket. Disconnecting it")
@@ -240,7 +249,7 @@ io.on("connection", (socket) => {
 
       if(friendSocketId){
         console.log("found socket")
-        io.to(friendSocketId).emit("received private message", {userId,message}); 
+        io.to(friendSocketId).emit("received private message", {userId: authenticated.user,message}); 
       }else console.log("friend socket not found")
       
       
@@ -303,6 +312,29 @@ io.on("connection", (socket) => {
     }
 
 
+  })
+
+  socket.on("am typing", ({token, chatroomId, friendId, bool }) => {
+    const authenticated = verifyToken(token)
+
+    if(authenticated.success){
+
+      console.log("Trusty socket. ", authenticated.user, "is typing in chat ", chatroomId, ": ", bool)
+      
+      const friendObject = connectedClients[friendId]
+      const friendSocketId = friendObject ? friendObject.socket.id : undefined
+
+      if(friendSocketId){
+        console.log("found socket")
+        io.to(friendSocketId).emit("is typing", {friendId: authenticated.user, chatroomId, bool}); 
+      }else console.log("friend socket not found")
+      
+      
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
   })
 
 })
