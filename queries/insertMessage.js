@@ -1,5 +1,5 @@
 
-const getQueryResult = require('../logic/getQueryResult.js')
+const runQuery = require('../logic/runQuery.js')
 
 const insertMessage = async (message) => {
   try{
@@ -7,11 +7,12 @@ const insertMessage = async (message) => {
     const query = `INSERT INTO MESSAGE (chatroomId,userId,text,seen,date)
                     VALUES (?,?,?,?,?)`
 
-    const queryResult = await getQueryResult(query, [message.chatroomId, message.userId, message.text, message.seen, message.date ]);
-      
+    const queryResult = await runQuery(query, [message.chatroomId, message.userId, message.text, message.seen, message.date ]);
+    
     console.log("query: ", queryResult)
+    console.log("lastID: " + queryResult.lastID)
   
-    return queryResult;
+    return queryResult.lastID;
     
     return true;
 

@@ -8,6 +8,7 @@ let db = new sqlite3.Database(DB_PATH, (err) => {
   console.log('Connected to the in-memory SQlite database.');
 });
 
+// For SELECTs
 const getQueryResult = (query, arguments = []) => {
     return new Promise((resolve, reject) => {
         db.all(query, arguments, (err, rows) => {

@@ -227,7 +227,7 @@ io.on("connection", (socket) => {
     }
   })
 
-  socket.on("sent private message", ({token, message}) => {
+  socket.on("sent private message", async ({token, message}) => {
     console.log("Socket: sent private message")
 
     console.log("message: ", message)
@@ -239,7 +239,9 @@ io.on("connection", (socket) => {
 
       console.log("Trusty socket. sending message")
 
-      insertMessage(message)
+      message.id = await insertMessage(message)
+      console.log("message with id: " + message)
+      console.log("message id : " + message.id)
 
       const friendId = message.receiverId
 
@@ -287,7 +289,7 @@ io.on("connection", (socket) => {
 
   socket.on("seen new messages", async ({token, chatroomId, friendId, smallestMessageId, biggestMessageId}) => {
 
-    console.log("seen new messages")
+    console.log("\n\n\nseen new messages\n\n\n")
     
     const authenticated = verifyToken(token)
 
