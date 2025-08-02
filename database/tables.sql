@@ -2,7 +2,6 @@ Drop TABLE IF EXISTS User;
 Drop TABLE IF EXISTS Friendship;
 Drop TABLE IF EXISTS Fsac;
 Drop TABLE IF EXISTS Chatroom;
-Drop TABLE IF EXISTS PrivateChatroom;
 Drop TABLE IF EXISTS PublicChatroomUser;
 Drop TABLE IF EXISTS Message;
 
@@ -18,21 +17,20 @@ CREATE TABLE User (
 CREATE TABLE Friendship (
     user1_id 	REFERENCES User,
     user2_id	REFERENCES User,
-    chatroomId  INTEGER REFERENCES Chatroom
-    PRIMARY KEY (user1_id, user2_id)
+    chatroom_id  REFERENCES Chatroom DEFAULT NULL,
+    PRIMARY KEY (user1_id, user2_id)  --TODO: prevent duplicate keys
 );
 
 CREATE TABLE Fsac (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     sender      REFERENCES User,
-    receiver    REFERENCES User,
-    endDate     INTEGER,
-    status      VARCHAR(20) --can be 'declined', 'standby', or 'accepted'
+    receiver    REFERENCES User
 );
 
 CREATE TABLE Chatroom(
-    id          VARCHAR(50) PRIMARY KEY,
-    ownerId     REFERENCES User DEFAULT NULL
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_id     REFERENCES User DEFAULT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE PublicChatroomUser(

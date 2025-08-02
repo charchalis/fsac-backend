@@ -1,12 +1,12 @@
-DROP TRIGGER IF EXISTS addChatroom;
+DROP TRIGGER IF EXISTS addFriendshipChatroom;
 DROP TRIGGER IF EXISTS removeChatroom;
 
-CREATE TRIGGER addChatroom 
-AFTER UPDATE ON Fsac 
-WHEN OLD.status != 'accepted' and NEW.status = 'accepted' 
+
+CREATE TRIGGER addFriendshipChatroom
+AFTER INSERT ON Friendship 
 BEGIN
-  INSERT INTO chatroom VALUES (NEW.sender || '-' || NEW.receiver, OLD.endDate);
-  INSERT INTO privatechatroom (id, user1_id, user2_id) VALUES (NEW.sender || '-' || NEW.receiver, NEW.sender, NEW.receiver);
+  INSERT INTO Chatroom (created_at) VALUES (CURRENT_TIMESTAMP);
+  UPDATE Friendship SET chatroom_id = (SELECT last_insert_rowid()) where user1_id = NEW.user1_id AND user2_id = NEW.user2_id;
 END;
 
 CREATE TRIGGER removeChatroom 
