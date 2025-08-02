@@ -348,8 +348,8 @@ io.on("connection", (socket) => {
 /*activate posts*/
 activatePosts(app)
 
-updateExpiredFsacs()
-cronJobExpireNextFsac()
+//updateExpiredFsacs()
+//cronJobExpireNextFsac()
 
 
 
