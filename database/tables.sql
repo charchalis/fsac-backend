@@ -18,6 +18,7 @@ CREATE TABLE User (
 CREATE TABLE Friendship (
     user1_id 	REFERENCES User,
     user2_id	REFERENCES User,
+    chatroomId  INTEGER REFERENCES Chatroom
     PRIMARY KEY (user1_id, user2_id)
 );
 
@@ -29,30 +30,22 @@ CREATE TABLE Fsac (
     status      VARCHAR(20) --can be 'declined', 'standby', or 'accepted'
 );
 
-
-
 CREATE TABLE Chatroom(
     id          VARCHAR(50) PRIMARY KEY,
-    endDate     INTEGER
-);
-
-CREATE TABLE PrivateChatroom(
-    id          REFERENCES Chatroom PRIMARY KEY,
-    user1_id    REFERENCES User,
-    user2_id    REFERENCES User
+    ownerId     REFERENCES User DEFAULT NULL
 );
 
 CREATE TABLE PublicChatroomUser(
-    userId REFERENCES User,
-    chatroomId  VARCHAR(50) REFERENCES Chatroom
+    userId      REFERENCES User,
+    chatroomId  INTEGER REFERENCES Chatroom
 );
 
 CREATE TABLE Message(
     id          INTEGER PRIMARY KEY AUTOINCREMENT, 
-    chatroomId  VARCHAR(50) REFERENCES Chatroom,
+    chatroomId  INTEGER REFERENCES Chatroom,
     userId      VARCHAR(50) REFERENCES User,
     text        VARCHAR(500),
-    seen       INTEGER,
+    seen        INTEGER,
     date        INTEGER,
 
     UNIQUE (id, chatroomId)
