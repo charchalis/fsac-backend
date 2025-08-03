@@ -18,9 +18,12 @@ const sendFsac = require('./queries/sendFsac.js')
 const updateExpiredFsacs = require('./queries/updateExpiredFsacs.js')
 const getFirstExpiringFsac = require('./queries/getFirstExpiringFsac.js')
 const cronJobExpireNextFsac = require('./logic/cronJobExpireNextFsac.js')
-const getChatroomId = require('./queries/getChatroomId.js');
 const acceptFsac = require('./queries/acceptFsac.js');
 const declineFsac = require('./queries/declineFsac.js');
+const getChatroomMessages = require('./queries/getChatroomMessages.js');
+const insertMessage = require('./queries/insertMessage.js');
+const reportSeenMessages = require('./queries/reportSeenMessages.js');
+const getChatrooms = require('./queries/getChatrooms.js');
 
 
 app.use(express.json());
@@ -35,7 +38,7 @@ const connectedClients = []
 /*SOCKET*/ 
 
 io.on("connection", (socket) => {
-  console.log("user connected")
+  console.log("Socket: user connected")
 
   
   //wait so clients have time to setup the socket
@@ -43,13 +46,11 @@ io.on("connection", (socket) => {
     function sleep(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
-    console.log("sleeping")
     await sleep(2000)
-    console.log("woke up")
   }
 
   wait().then(() =>{
-    console.log("papers please")
+    console.log("Socket Emit: papers please")
     socket.emit("papers please")
   })
   
@@ -59,17 +60,16 @@ io.on("connection", (socket) => {
   
   socket.on('disconnect', (reason) => {
     // Remove the socket ID when a client disconnects
-    console.log("user disconnected")
+    console.log("Socket: user disconnected")
     console.log("reason: ", reason)
     const disconnectedClient = connectedClients.find((client) => client.socket.id === socket.id)
     if(disconnectedClient) delete connectedClients[disconnectedClient.userId];
     console.log("connectedClients: ", Object.keys(connectedClients).length)
-    console.log("connectedClients: ", connectedClients)
   });
   
   socket.on('authenticate client socket', token => {
     
-    console.log("authenticating client socket")
+    console.log("Socket: authenticating client socket")
 
     const authenticated = verifyToken(token) 
 
@@ -77,7 +77,6 @@ io.on("connection", (socket) => {
       console.log("Trusty socket. Proceeding")
       connectedClients[authenticated.user] = {userId: authenticated.user, socket: socket}
       console.log("connectedClients: ", Object.keys(connectedClients).length)
-      console.log(connectedClients)
     }else{
       console.log("Untrusty socket. Disconnecting it")
       socket.emit("untrusty socket")
@@ -87,7 +86,7 @@ io.on("connection", (socket) => {
   })
   
   socket.on("gimme friends", async token => {
-    console.log("friend list request")
+    console.log("Socket: friend list request")
 
     const authenticated = verifyToken(token) 
 
@@ -106,16 +105,12 @@ io.on("connection", (socket) => {
   })
 
   socket.on("search friend", async ({token, usernameSearch})=> {
-    console.log("search friend request")
-    
-    console.log("token: ", token)
-    console.log("usernameSeach: ", usernameSearch)
+    console.log("Socket: search friend request")
 
     const authenticated = verifyToken(token) 
 
     if(authenticated.success){
       console.log("Trusty socket. Sending possible friends list")
-      console.log("authenticated.user:", authenticated.user)
       const possibleFriends = await getPossibleFriends(authenticated.user, usernameSearch)
       socket.emit("take possible friends", possibleFriends)
     }else{
@@ -128,21 +123,18 @@ io.on("connection", (socket) => {
   })
   
   socket.on("add friend", async ({token, friend})=> {
-    console.log("add friend request")
+    console.log("Socket: add friend request")
     
-    console.log("token: ", token)
     const friendId = friend.id
-    console.log("friendId: ", friendId)
 
     const authenticated = verifyToken(token) 
 
     if(authenticated.success){
       console.log("Trusty socket. Adding friendship")
-      console.log("authenticated.user:", authenticated.user)
-      const friendshipConfirmation = await addFriend(authenticated.user, friendId)
-      console.log(friendshipConfirmation)
-      if(friendshipConfirmation){
-        socket.emit("new friend", friend)
+      const chatroomId = await addFriend(authenticated.user, friendId)
+      if(chatroomId){
+        friend.chatroom_id = chatroomId
+        socket.emit("new friend", {friend})
       }
     }else{
       console.log("Untrusty socket. Disconnecting it")
@@ -154,11 +146,7 @@ io.on("connection", (socket) => {
   })
 
   socket.on("fsac?", async ({token, userId, friendId})=> {
-    console.log("fsac request")
-
-    console.log("token: ", token)
-    console.log("userId: ", userId)
-    console.log("friendId: ", friendId)
+    console.log("Socket: fsac request from ",userId," to ", friendId)
 
     const authenticated = verifyToken(token) 
 
@@ -166,14 +154,13 @@ io.on("connection", (socket) => {
       console.log("Trusty socket. Adding sending fsac")
       console.log("authenticated.user:", authenticated.user)
 
-      const timespan = Date.now() + 4 * 60 * 60 * 1000 //current unix time + 4 hours
+      const endDate = Date.now() + 4 * 60 * 60 * 1000 //current unix time + 4 hours
 
-      const fsacConfirmation = await sendFsac(authenticated.user, friendId, timespan)
-      console.log(fsacConfirmation)
+      const fsacConfirmation = await sendFsac(authenticated.user, friendId, endDate)
       if(fsacConfirmation){
 
         console.log("fsac on database. sending fsac invite confirmation back to client")
-        socket.emit("fsac invite successful", {friendId: friendId, timespan: timespan})
+        socket.emit("fsac invite successful", {friendId: friendId, endDate: endDate})
 
         const friendObject = connectedClients[friendId]
         
@@ -197,20 +184,25 @@ io.on("connection", (socket) => {
   })
 
   socket.on("accepted fsac", async ({token, friendId}) => {
-    console.log("accepted fsac")
+    console.log("Socket: accepted fsac")
     
-    console.log("token: ", token)
-    console.log("friendId: ", friendId)
-
     const authenticated = verifyToken(token) 
 
     if(authenticated.success){
       console.log("Trusty socket. accepting fsac")
-      console.log("authenticated.user:", authenticated.user)
       const acceptFsacSuccess = await acceptFsac(authenticated.user, friendId)
       if(acceptFsacSuccess){
-        console.log("acceptFsacSuccess: ", acceptFsacSuccess)
-        socket.emit("successful accept fsac", {chatroomId: acceptFsacSuccess.chatroomId, friendId: friendId})
+        socket.emit("successful accept fsac", {chatroomId: acceptFsacSuccess, friendId: friendId})
+
+        const friendObject = connectedClients[friendId]
+        
+        const friendSocketId = friendObject ? friendObject.socket.id : undefined
+
+        if(friendSocketId){
+          console.log("found socket")
+          io.to(friendSocketId).emit("accepted fsac", {friendId: authenticated.user, chatroomId: acceptFsacSuccess});   
+        }
+        else console.log("friend socket not found")
       }
     }else{
       console.log("Untrusty socket. Disconnecting it")
@@ -220,17 +212,11 @@ io.on("connection", (socket) => {
   })
 
   socket.on("declined fsac", async ({token, friendId}) => {
-    console.log("declined fsac")
-    
-    console.log("token: ", token)
-    console.log("friendId: ", friendId)
-
+    console.log("Socket: declined fsac")
     const authenticated = verifyToken(token) 
 
     if(authenticated.success){
       console.log("Trusty socket. declining fsac")
-      console.log("authenticated.user:", authenticated.user)
-
       const databaseSuccess = declineFsac(authenticated.user, friendId)
       
       if(databaseSuccess) socket.emit("successful fsac decline", friendId)
@@ -243,8 +229,10 @@ io.on("connection", (socket) => {
     }
   })
 
-  socket.on("sent private message", ({token, message}) => {
-    console.log("sent private message")
+  socket.on("sent message", async ({token, message}) => {
+    console.log("Socket: sent message")
+
+    console.log("message: ", message)
     
     const authenticated = verifyToken(token)
 
@@ -253,6 +241,20 @@ io.on("connection", (socket) => {
 
       console.log("Trusty socket. sending message")
 
+      message.id = await insertMessage(message)
+
+      socket.emit("backend received message successfully")
+
+      const friendId = message.receiverId
+
+      const friendObject = connectedClients[friendId]
+        
+      const friendSocketId = friendObject ? friendObject.socket.id : undefined
+
+      if(friendSocketId){
+        console.log("found socket")
+        io.to(friendSocketId).emit("received message", {message}); 
+      }else console.log("friend socket not found")
       
       
         
@@ -266,26 +268,17 @@ io.on("connection", (socket) => {
 
   })
 
-  socket.on("entered private chatroom", ({token, friend}) => {
+  socket.on("gimme messages", async ({token, chatroomId}) => {
 
-    console.log("entered private chatroom")
+    console.log("Socket: gimme messages")
     
     const authenticated = verifyToken(token)
 
     if(authenticated.success){
 
-      console.log("Trusty socket. sending chatroom messages")
-      
-      const chatroomId = getChatroomId(authenticated.user, friend)
-      
-      // if(chatroomId){
-        
-      // }
-
-      // socket.emit("take messages", )
-      
-      
-        
+      console.log("Trusty socket. sending chatroom (", chatroomId, ") messages")
+      const messages = await getChatroomMessages(chatroomId)
+      socket.emit("take messages", messages)
       
     }else{
       console.log("Untrusty socket. Disconnecting it")
@@ -294,6 +287,76 @@ io.on("connection", (socket) => {
     }
 
 
+  })
+
+  socket.on("seen new messages", async ({token, chatroomId, friendId, smallestMessageId, biggestMessageId}) => {
+
+    console.log("\n\n\nseen new messages\n\n\n")
+    
+    const authenticated = verifyToken(token)
+
+    if(authenticated.success){
+
+      console.log("Trusty socket. reporting seen messages of ", chatroomId, " chat")
+      await reportSeenMessages(authenticated.user, chatroomId, smallestMessageId, biggestMessageId)
+      
+
+      const friendObject = connectedClients[friendId]
+      const friendSocketId = friendObject ? friendObject.socket.id : undefined
+
+      if(friendSocketId){
+        console.log("found socket")
+        io.to(friendSocketId).emit("friend seen", {chatroomId, userId: authenticated.user, smallestMessageId, biggestMessageId}); 
+      }else console.log("friend socket not found")
+      
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
+
+
+  })
+
+  socket.on("am typing", ({token, chatroomId, friendId, bool }) => {
+    const authenticated = verifyToken(token)
+
+    if(authenticated.success){
+
+      console.log("Trusty socket. ", authenticated.user, "is typing in chat ", chatroomId, ": ", bool)
+      
+      const friendObject = connectedClients[friendId]
+      const friendSocketId = friendObject ? friendObject.socket.id : undefined
+
+      if(friendSocketId){
+        console.log("found socket")
+        io.to(friendSocketId).emit("is typing", {friendId: authenticated.user, chatroomId, bool}); 
+      }else console.log("friend socket not found")
+      
+      
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
+  })
+
+  socket.on("gimme chatrooms", async (token) => {
+    console.log("Socket: gimme chatrooms")
+    const authenticated = verifyToken(token) 
+
+    if(authenticated.success){
+      console.log("Trusty socket. declining fsac")
+      const chatrooms = await getChatrooms(authenticated.user)
+      
+      socket.emit("take chatrooms", chatrooms)
+
+      
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
   })
 
 })
@@ -305,8 +368,8 @@ io.on("connection", (socket) => {
 /*activate posts*/
 activatePosts(app)
 
-updateExpiredFsacs()
-cronJobExpireNextFsac()
+//updateExpiredFsacs()
+//cronJobExpireNextFsac()
 
 
 

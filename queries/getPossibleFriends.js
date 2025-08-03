@@ -15,6 +15,9 @@ const getPossibleFriends = async (userId, userSearch) => {
       const image = fs.readFileSync('./images/' + friend.imagePath, { encoding: 'base64' });
       friend.image = image;
       delete friend.imagePath;
+      friend.endDate = null;
+      friend.statuss = "no fsac";
+      friend.chatroomId = null
       return friend;
     });
   

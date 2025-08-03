@@ -9,7 +9,7 @@ const updateExpiredFsacs = async () => {
     try{
 
         await getQueryResult(
-            'update friendship set fsac = NULL where fsac < ? and fsac <> 1 and fsac <> -1'  
+            'delete from fsac where endDate < ?'  
         ,[currentTime]);
         
         return true;
