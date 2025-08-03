@@ -11,6 +11,6 @@ INSERT INTO User VALUES
 --('Polaco', 'Potus'),
 --('Polaco', 'Caracol');
 
-INSERT INTO Fsac (sender, receiver) VALUES
-('Polaco', 'Potus'),
-('Caracol', 'Polaco');
+--INSERT INTO Fsac (sender, receiver) VALUES
+--('Polaco', 'Potus'),
+--('Caracol', 'Polaco');
