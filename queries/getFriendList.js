@@ -6,7 +6,11 @@ const getFriendList = async (userId) => {
 
   
   const query = `select distinct user.id, user.username, user.firstName, user.lastName,
-  user.imagePath, friendship.chatroom_id as chatroom_id 
+  user.imagePath, friendship.chatroom_id as chatroom_id,
+  CASE 
+    WHEN fsac.sender IS NOT NULL THEN true 
+    ELSE false 
+  END AS fsacoso
   from user
   
   inner join friendship on (
@@ -16,51 +20,24 @@ const getFriendList = async (userId) => {
   ) 
     
     
-  left join fsac as fsacSender on fsacSender.sender = user.id and fsacSender.receiver = ?
-  left join fsac as fsacReceiver on fsacReceiver.receiver = user.id and fsacReceiver.sender = ?
+  left join fsac on sender = user.id and receiver = ?
   `
 
+  let friendList = await getQueryResult(query,[userId,userId,userId]);
 
-  const friendList = await getQueryResult(query,[userId,userId,userId,userId]);
+  friendList.forEach(friend => friend.fsacoso = friend.fsacoso === 1 ? true : false)
 
-  console.log(friendList)
-
-  const friendListWithMessages = async (friends) => {
-
-    console.log("friends: ", friends)
-
-    for(let i = 0; i<friends.length; i++){
-      const friend = friends[i]
-      if(!friend.chatroomId) continue
-
-      const query2 = 'select * from message where chatroomId = ?'
-      console.log("query:", query2)
-      const messages = await getQueryResult(query2,[friend.chatroomId]);
-      console.log("messages:", messages)
-      friend.messages = messages
-    }
-    
-    return friends
-
-  }
-
-  const popo = await friendListWithMessages(friendList)
+  console.log("friends: ")
+  friendList.forEach(friend => console.log(friend))
   
-  const friendListWithProfilePics = popo.map((friend) => {
+  friendList = friendList.map((friend) => {
     const image = fs.readFileSync('./images/' + friend.imagePath, { encoding: 'base64' });
     friend.image = image;
     delete friend.imagePath;
     return friend;
   });
 
-  return friendListWithProfilePics.sort((a,b) => {
-    if (a.statuss === 'accepted' && b.statuss != 'accepted') return -1; // a comes first
-    if (a.statuss === 'received fsac' && b.statuss != 'accepted' && b.statuss != 'received fsac') return -1; // a comes first
-    if (a.statuss === 'sent fsac' && b.statuss != 'accepted' && b.statuss != 'received fsac' && b.statuss != 'sent fsac') return -1; // a comes first
-    if (a.statuss === 'no fsac' && b.statuss != 'accepted' && b.statuss != 'received fsac' && b.statuss != 'sent fsac' && b.statuss != 'no fsac') return -1; // a comes first
-    //return a.timespan - b.timespan; // compare ages for non -1 values
-    return 1;
-  });
+  return friendList
 
 
 }

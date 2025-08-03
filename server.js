@@ -23,6 +23,7 @@ const declineFsac = require('./queries/declineFsac.js');
 const getChatroomMessages = require('./queries/getChatroomMessages.js');
 const insertMessage = require('./queries/insertMessage.js');
 const reportSeenMessages = require('./queries/reportSeenMessages.js');
+const getChatrooms = require('./queries/getChatrooms.js');
 
 
 app.use(express.json());
@@ -227,8 +228,8 @@ io.on("connection", (socket) => {
     }
   })
 
-  socket.on("sent private message", async ({token, message}) => {
-    console.log("Socket: sent private message")
+  socket.on("sent message", async ({token, message}) => {
+    console.log("Socket: sent message")
 
     console.log("message: ", message)
     
@@ -240,8 +241,8 @@ io.on("connection", (socket) => {
       console.log("Trusty socket. sending message")
 
       message.id = await insertMessage(message)
-      console.log("message with id: " + message)
-      console.log("message id : " + message.id)
+
+      socket.emit("backend received message successfully")
 
       const friendId = message.receiverId
 
@@ -331,6 +332,24 @@ io.on("connection", (socket) => {
         io.to(friendSocketId).emit("is typing", {friendId: authenticated.user, chatroomId, bool}); 
       }else console.log("friend socket not found")
       
+      
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
+  })
+
+  socket.on("gimme chatrooms", async (token) => {
+    console.log("Socket: gimme chatrooms")
+    const authenticated = verifyToken(token) 
+
+    if(authenticated.success){
+      console.log("Trusty socket. declining fsac")
+      const chatrooms = await getChatrooms(authenticated.user)
+      
+      socket.emit("take chatrooms", chatrooms)
+
       
     }else{
       console.log("Untrusty socket. Disconnecting it")

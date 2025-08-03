@@ -6,12 +6,8 @@ const getChatroomMessages = async (chatroomId) => {
     const query = `SELECT * FROM message WHERE chatroomId = ?`
 
     const queryResult = await getQueryResult(query, [chatroomId]);
-      
-    console.log("query: ", queryResult)
   
     return queryResult;
-    
-    return true;
 
   }catch(err){
     return false;
