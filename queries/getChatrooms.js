@@ -22,6 +22,8 @@ const getChatrooms = async (userId) => {
       })
     )
 
+    chatrooms.forEach(r => console.log(r))
+
     return chatrooms;
 
   }catch(err){

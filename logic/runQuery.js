@@ -17,7 +17,7 @@ const runQuery = (query, params = []) => {
         return reject(err.message);
       }
       // `this` is the Statement object: has .lastID, .changes
-      resolve({ lastID: this.lastID, changes: this.changes });
+      resolve({ lastID: this.lastID, changes: this.changes});
     });
   });
 };

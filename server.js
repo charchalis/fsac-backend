@@ -131,9 +131,10 @@ io.on("connection", (socket) => {
 
     if(authenticated.success){
       console.log("Trusty socket. Adding friendship")
-      const friendshipConfirmation = await addFriend(authenticated.user, friendId)
-      if(friendshipConfirmation){
-        socket.emit("new friend", friend)
+      const chatroomId = await addFriend(authenticated.user, friendId)
+      if(chatroomId){
+        friend.chatroom_id = chatroomId
+        socket.emit("new friend", {friend})
       }
     }else{
       console.log("Untrusty socket. Disconnecting it")
@@ -252,7 +253,7 @@ io.on("connection", (socket) => {
 
       if(friendSocketId){
         console.log("found socket")
-        io.to(friendSocketId).emit("received private message", {userId: authenticated.user,message}); 
+        io.to(friendSocketId).emit("received message", {message}); 
       }else console.log("friend socket not found")
       
       
