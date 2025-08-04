@@ -25,6 +25,7 @@ const insertMessage = require('./queries/insertMessage.js');
 const reportSeenMessages = require('./queries/reportSeenMessages.js');
 const getChatrooms = require('./queries/getChatrooms.js');
 const notFsacosoAnymore = require('./queries/notFsacosoAnymore.js');
+const amIFsacoso = require('./queries/amIFsacoso.js');
 
 
 app.use(express.json());
@@ -383,6 +384,23 @@ io.on("connection", (socket) => {
       socket.disconnect()
     }
   })
+
+  socket.on("am I fsacoso?", async (token) => {
+    console.log("Socket: am I fsacoso?")
+    const authenticated = verifyToken(token) 
+
+    if(authenticated.success){
+      console.log("Trusty socket. removing fsacs")
+      const fsacoso = await amIFsacoso(authenticated.user)
+      socket.emit('you are fsacoso', fsacoso)
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
+  })
+
+  
 
 })
 
