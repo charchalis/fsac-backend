@@ -4,13 +4,13 @@ const sendFsac = async (userId, friendId, endDate) => {
   try{
     
     console.log("userid: ", userId)
-    console.log("firnedid: ", friendId)
+    console.log("friendid: ", friendId)
     console.log("endDate: ", endDate)
 
 
     const query = "insert into fsac (sender, receiver) values (?,?)"
 
-    const queryResult = await getQueryResult(query,[userId, friendId, endDate]);
+    const queryResult = await getQueryResult(query,[userId, friendId]);
   
     console.log("queryResult:", queryResult)
 

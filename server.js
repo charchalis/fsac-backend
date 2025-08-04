@@ -24,6 +24,7 @@ const getChatroomMessages = require('./queries/getChatroomMessages.js');
 const insertMessage = require('./queries/insertMessage.js');
 const reportSeenMessages = require('./queries/reportSeenMessages.js');
 const getChatrooms = require('./queries/getChatrooms.js');
+const notFsacosoAnymore = require('./queries/notFsacosoAnymore.js');
 
 
 app.use(express.json());
@@ -352,6 +353,30 @@ io.on("connection", (socket) => {
       socket.emit("take chatrooms", chatrooms)
 
       
+    }else{
+      console.log("Untrusty socket. Disconnecting it")
+      socket.emit("untrusty socket")
+      socket.disconnect()
+    }
+  })
+
+  socket.on("not fsacoso anymore", async ({token}) => {
+    console.log("Socket: not fsacoso anymore")
+    const authenticated = verifyToken(token) 
+
+    if(authenticated.success){
+      console.log("Trusty socket. removing fsacs")
+      const deletedFsacFriends = await notFsacosoAnymore(authenticated.user)
+      deletedFsacFriends.forEach(friendId => {
+        console.log(friendId)
+        const friendObject = connectedClients[friendId]
+        const friendSocketId = friendObject ? friendObject.socket.id : undefined
+        if(friendSocketId){
+          console.log("found socket")
+          console.log(authenticated.user)
+          io.to(friendSocketId).emit("friend not fsacoso anymore", {friendId: authenticated.user}); 
+        }else console.log("friend socket not found")
+      })
     }else{
       console.log("Untrusty socket. Disconnecting it")
       socket.emit("untrusty socket")
