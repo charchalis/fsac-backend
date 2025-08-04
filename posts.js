@@ -11,8 +11,12 @@ const getQueryResult = require('./logic/getQueryResult.js')
 const hashPassword = require('./logic/hashPassword.js')
 const verifyToken = require('./logic/verifyToken.js')
 
+const notFsacosoAnymore = require('./queries/notFsacosoAnymore.js');
 
-const activatePosts = (app) => {
+const { connectedClients } = require('./socket');
+
+
+const activatePosts = (app, io) => {
 
 
 
@@ -177,6 +181,40 @@ app.post('/getFriends', async (req, res) => {
   
   res.status(200).send(friends)
   res.end()
+})
+
+
+//to turn off fsacosity when app is closed
+app.post('/notFsacosoAnymore', async (req, res) => {
+  console.log("notFsacosoAnymore Request")
+  console.log("\n\n\n\nNOTFSACOSOANYMORE POST\n\n\n\n")
+
+  const { token } = req.body;
+  const authenticated = verifyToken(token);
+
+  if (!authenticated.success) {
+    console.log('Untrusty POST. Rejecting.');
+    return res.status(401).json({ success: false });
+  }
+
+  console.log('Trusty POST. Removing fsacs');
+  const deletedFsacFriends = await notFsacosoAnymore(authenticated.user);
+
+  deletedFsacFriends.forEach(friendId => {
+    const friendObject = connectedClients[friendId];
+    const friendSocketId = friendObject?.socket.id;
+
+    if (friendSocketId) {
+      console.log('found socket');
+      io.to(friendSocketId).emit('friend not fsacoso anymore', {
+        friendId: authenticated.user,
+      });
+    } else {
+      console.log('friend socket not found');
+    }
+  });
+
+  return res.status(200).json({ success: true });
 })
 
 
