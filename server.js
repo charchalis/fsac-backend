@@ -1,3 +1,6 @@
+
+/*----------IMPORTS----------*/
+
 const express     =   require('express');
 const app         =   express();
 
@@ -6,9 +9,8 @@ const server      =   http.createServer(app);
 const { Server }  =   require("socket.io");
 const io          =   new Server(server);
 
-
-require('./socket.js')(io);
-const {activatePosts} = require('./posts.js')
+require('./socket.js')(io);  //socket related stuff
+const {activatePosts} = require('./posts.js') //endpoint stuff
 
 const updateExpiredFsacs = require('./queries/updateExpiredFsacs.js')
 const getFirstExpiringFsac = require('./queries/getFirstExpiringFsac.js')
@@ -16,7 +18,7 @@ const cronJobExpireNextFsac = require('./logic/cronJobExpireNextFsac.js')
 
 
 
-
+/*----------MAIN----------*/
 
 app.use(express.json());
 
@@ -26,24 +28,12 @@ app.get('/', (req, res) => {
 
 
 
-
-/*SOCKET*/ 
-
-
-
-
-
-
-
 /*activate posts*/
 activatePosts(app, io)
 
+
 //updateExpiredFsacs()
 //cronJobExpireNextFsac()
-
-
-
-
 
 
 /*SERVER LISTEN*/
