@@ -223,7 +223,7 @@ module.exports = function(io) {
       
             message.id = await insertMessage(message)
       
-            socket.emit("backend received message successfully")
+            socket.emit("backend received message successfully", {chatroomId: message.chatroomId, messageDate: message.date, messageId: message.id})
       
             const friendId = message.receiverId
       
@@ -269,16 +269,16 @@ module.exports = function(io) {
       
         })
       
-        socket.on("seen new messages", async ({token, chatroomId, friendId, smallestMessageId, biggestMessageId}) => {
+        socket.on("seen new messages", async ({token, chatroomId, seenDate, friendId}) => {
       
-          console.log("\n\n\nseen new messages\n\n\n")
+          console.log("seen new messages")
           
           const authenticated = verifyToken(token)
       
           if(authenticated.success){
       
-            console.log("Trusty socket. reporting seen messages of ", chatroomId, " chat")
-            await reportSeenMessages(authenticated.user, chatroomId, smallestMessageId, biggestMessageId)
+            console.log("Trusty socket. reporting seen messages of chat", chatroomId)
+            await reportSeenMessages(authenticated.user, chatroomId, seenDate)
             
       
             const friendObject = connectedClients[friendId]
@@ -286,7 +286,7 @@ module.exports = function(io) {
       
             if(friendSocketId){
               console.log("found socket")
-              io.to(friendSocketId).emit("friend seen", {chatroomId, userId: authenticated.user, smallestMessageId, biggestMessageId}); 
+              io.to(friendSocketId).emit("friend seen", {chatroomId, userId: authenticated.user, seenDate}); 
             }else console.log("friend socket not found")
             
           }else{
@@ -326,7 +326,7 @@ module.exports = function(io) {
           const authenticated = verifyToken(token) 
       
           if(authenticated.success){
-            console.log("Trusty socket. declining fsac")
+            console.log("Trusty socket. giving chatrooms")
             const chatrooms = await getChatrooms(authenticated.user)
             
             socket.emit("take chatrooms", chatrooms)

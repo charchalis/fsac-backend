@@ -7,7 +7,7 @@ const getChatroomMessages = async (chatroomId) => {
 
     const queryResult = await getQueryResult(query, [chatroomId]);
   
-    return queryResult;
+    return queryResult.map(message => {message.seen = message.seen === 1; return message});
 
   }catch(err){
     return false;
