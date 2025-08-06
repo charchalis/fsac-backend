@@ -1,11 +1,11 @@
 const getQueryResult = require('../logic/getQueryResult.js')
 
-const reportSeenMessages = async (userId, chatroomId, smallestId, biggestId) => {
+const reportSeenMessages = async (userId, chatroomId, seenDate) => {
   try{
       
     const queryResult = await getQueryResult(
-      "update message set seen=1 where chatroomId = ? and userId != ? and id>=? and id<=?" 
-    ,[chatroomId, userId, smallestId, biggestId]);
+      "update message set seen=1 where chatroomId = ? and userId != ? and date <= ?" 
+    ,[chatroomId, userId, seenDate]);
       
     return true;
 
